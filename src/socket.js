@@ -83,11 +83,12 @@ export default function initSocket(io) {
 
         // Sadece config.ROOM_NAME odasına gönder (güvenlik kontrolü)
         console.log("Oda kontrolü - roomCode:", roomCode, "config.ROOM_NAME:", config.ROOM_NAME);
+        
         if (roomCode !== config.ROOM_NAME) {
           console.error(`❌ İZİN VERİLMEYEN ODA: ${roomCode}`);
           console.error(`   Beklenen: ${config.ROOM_NAME}`);
           console.error(`   Gelen: ${roomCode}`);
-          console.error(`   config.ROOM_NAME: ${config.ROOM_NAME}`);
+          console.error(`   Veri gönderilmiyor - sadece ${config.ROOM_NAME} odasına izin var`);
           return;
         }
         
@@ -95,7 +96,7 @@ export default function initSocket(io) {
 
         // İlgili odaya datayı aynen ilet (sadece config.ROOM_NAME odasındaki kullanıcılar alır)
         // io.to() zaten sadece o odadaki kullanıcılara gönderir
-        // Backend'de sadece config.ROOM_NAME odasına veri gönderiliyor, başka odaya gönderilmiyor
+        // Kesinlikle sadece config.ROOM_NAME odasına gönderiliyor, başka odaya gönderilmiyor
         io.to(roomCode).emit("transaction-update", {
           type,
           data: payload

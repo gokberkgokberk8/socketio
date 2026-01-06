@@ -56,7 +56,7 @@ app.post("/teslimat", (req, res) => {
     console.log(JSON.stringify(data, null, 2));
     console.log("═══════════════════════════════════════");
 
-    // Config'deki oda kodunu kullan
+    // Her zaman config.ROOM_NAME odasına gönder (sabit oda)
     const targetRoom = config.ROOM_NAME;
     
     if (!targetRoom) {
@@ -68,6 +68,7 @@ app.post("/teslimat", (req, res) => {
     console.log("   Config.ROOM_NAME:", config.ROOM_NAME);
     console.log("   targetRoom:", targetRoom);
     console.log("   Tip: teslimat");
+    console.log("   NOT: Tüm veriler otomatik olarak bu odaya gönderiliyor");
     console.log("Socket bağlantı durumu:", socketClient.connected ? "Bağlı" : "Bağlı DEĞİL");
 
     // Socket bağlantısı kontrolü
@@ -137,7 +138,7 @@ app.post("/cekim", (req, res) => {
     console.log(JSON.stringify(data, null, 2));
     console.log("═══════════════════════════════════════");
 
-    // Config'deki oda kodunu kullan
+    // Her zaman config.ROOM_NAME odasına gönder (sabit oda)
     const targetRoom = config.ROOM_NAME;
     
     if (!targetRoom) {
@@ -149,6 +150,7 @@ app.post("/cekim", (req, res) => {
     console.log("   Config.ROOM_NAME:", config.ROOM_NAME);
     console.log("   targetRoom:", targetRoom);
     console.log("   Tip: cekim");
+    console.log("   NOT: Tüm veriler otomatik olarak bu odaya gönderiliyor");
     console.log("Socket bağlantı durumu:", socketClient.connected ? "Bağlı" : "Bağlı DEĞİL");
 
     // Socket bağlantısı kontrolü
@@ -210,7 +212,7 @@ app.post("/yatirim", (req, res) => {
     console.log(JSON.stringify(data, null, 2));
     console.log("═══════════════════════════════════════");
 
-    // Config'deki oda kodunu kullan
+    // Her zaman config.ROOM_NAME odasına gönder (sabit oda)
     const targetRoom = config.ROOM_NAME;
     
     if (!targetRoom) {
@@ -222,6 +224,7 @@ app.post("/yatirim", (req, res) => {
     console.log("   Config.ROOM_NAME:", config.ROOM_NAME);
     console.log("   targetRoom:", targetRoom);
     console.log("   Tip: yatirim");
+    console.log("   NOT: Tüm veriler otomatik olarak bu odaya gönderiliyor");
     console.log("Socket bağlantı durumu:", socketClient.connected ? "Bağlı" : "Bağlı DEĞİL");
 
     // Socket bağlantısı kontrolü
