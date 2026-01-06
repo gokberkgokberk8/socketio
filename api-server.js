@@ -57,12 +57,11 @@ app.post("/teslimat", (req, res) => {
     console.log("═══════════════════════════════════════");
 
     // Config'deki oda kodunu kullan
-    const targetRoom = config.ROOM_NAME || "DKRO0VSSVJ"; // Fallback olarak DKRO0VSSVJ
+    const targetRoom = config.ROOM_NAME;
     
-    // Güvenlik kontrolü
-    if (targetRoom !== "DKRO0VSSVJ") {
-      console.error("❌ HATA: targetRoom DKRO0VSSVJ değil! Değer:", targetRoom);
-      console.error("config.ROOM_NAME:", config.ROOM_NAME);
+    if (!targetRoom) {
+      console.error("❌ HATA: config.ROOM_NAME tanımlı değil!");
+      return res.status(500).json({ success: false, message: "Oda kodu tanımlı değil" });
     }
 
     console.log("📤 Teslimat API - Socket'e gönderiliyor");
@@ -139,12 +138,11 @@ app.post("/cekim", (req, res) => {
     console.log("═══════════════════════════════════════");
 
     // Config'deki oda kodunu kullan
-    const targetRoom = config.ROOM_NAME || "DKRO0VSSVJ"; // Fallback olarak DKRO0VSSVJ
+    const targetRoom = config.ROOM_NAME;
     
-    // Güvenlik kontrolü
-    if (targetRoom !== "DKRO0VSSVJ") {
-      console.error("❌ HATA: targetRoom DKRO0VSSVJ değil! Değer:", targetRoom);
-      console.error("config.ROOM_NAME:", config.ROOM_NAME);
+    if (!targetRoom) {
+      console.error("❌ HATA: config.ROOM_NAME tanımlı değil!");
+      return res.status(500).json({ success: false, message: "Oda kodu tanımlı değil" });
     }
 
     console.log("📤 Çekim API - Socket'e gönderiliyor");
@@ -187,11 +185,93 @@ app.post("/cekim", (req, res) => {
   }
 });
 
+/**
+ * Yatırım API endpoint'i
+ * POST /yatirim
+ * Body: { data: {...} }
+ */
+app.post("/yatirim", (req, res) => {
+  try {
+    const { data } = req.body;
+
+    // data parametresi kontrolü
+    if (!data) {
+      return res.status(400).json({
+        success: false,
+        message: "data parametresi gereklidir"
+      });
+    }
+
+    // Gelen datayı console'da göster
+    console.log("═══════════════════════════════════════");
+    console.log("💵 YATIRIM API ÇAĞRILDI");
+    console.log("⏰ Zaman:", new Date().toLocaleString("tr-TR"));
+    console.log("📋 Gelen Data:");
+    console.log(JSON.stringify(data, null, 2));
+    console.log("═══════════════════════════════════════");
+
+    // Config'deki oda kodunu kullan
+    const targetRoom = config.ROOM_NAME;
+    
+    if (!targetRoom) {
+      console.error("❌ HATA: config.ROOM_NAME tanımlı değil!");
+      return res.status(500).json({ success: false, message: "Oda kodu tanımlı değil" });
+    }
+
+    console.log("📤 Yatırım API - Socket'e gönderiliyor");
+    console.log("   Config.ROOM_NAME:", config.ROOM_NAME);
+    console.log("   targetRoom:", targetRoom);
+    console.log("   Tip: yatirim");
+    console.log("Socket bağlantı durumu:", socketClient.connected ? "Bağlı" : "Bağlı DEĞİL");
+
+    // Socket bağlantısı kontrolü
+    if (!socketClient.connected) {
+      console.error("❌ Socket bağlantısı yok! Veri gönderilemedi.");
+      return res.status(500).json({
+        success: false,
+        message: "Socket bağlantısı kurulamadı"
+      });
+    }
+
+    // API'den gelen yatırım datasını socket sunucusuna ilet
+    const emitData = {
+      roomCode: targetRoom,
+      type: "yatirim",
+      payload: data
+    };
+
+    console.log("📤 Emit edilecek data:", {
+      roomCode: emitData.roomCode,
+      type: emitData.type,
+      payloadKeys: Object.keys(emitData.payload)
+    });
+
+    socketClient.emit("transaction-update", emitData);
+
+    console.log("✅ Socket'e emit edildi - roomCode:", targetRoom);
+
+    // Başarılı yanıt
+    res.json({
+      success: true,
+      message: "Yatırım verisi alındı",
+      receivedData: data
+    });
+  } catch (error) {
+    console.error("❌ Yatırım API hatası:", error);
+    res.status(500).json({
+      success: false,
+      message: "Sunucu hatası",
+      error: error.message
+    });
+  }
+});
+
 const server = app.listen(3001, () => {
   console.log(`🌐 API Server 3001 portunda`);
   console.log(`💾 RAM: ${Math.round(process.memoryUsage().rss / 1024 / 1024)} MB`);
   console.log(`📡 Endpoint'ler:`);
   console.log(`   - POST http://localhost:3001/teslimat`);
   console.log(`   - POST http://localhost:3001/cekim`);
+  console.log(`   - POST http://localhost:3001/yatirim`);
 });
 

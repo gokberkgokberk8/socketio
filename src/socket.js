@@ -81,21 +81,21 @@ export default function initSocket(io) {
           return;
         }
 
-        // Sadece DKRO0VSSVJ odasına gönder (güvenlik kontrolü)
+        // Sadece config.ROOM_NAME odasına gönder (güvenlik kontrolü)
         console.log("Oda kontrolü - roomCode:", roomCode, "config.ROOM_NAME:", config.ROOM_NAME);
-        if (roomCode !== "DKRO0VSSVJ") {
+        if (roomCode !== config.ROOM_NAME) {
           console.error(`❌ İZİN VERİLMEYEN ODA: ${roomCode}`);
-          console.error(`   Beklenen: DKRO0VSSVJ`);
+          console.error(`   Beklenen: ${config.ROOM_NAME}`);
           console.error(`   Gelen: ${roomCode}`);
           console.error(`   config.ROOM_NAME: ${config.ROOM_NAME}`);
           return;
         }
         
-        console.log("✅ Oda kontrolü geçti - DKRO0VSSVJ odasına gönderiliyor");
+        console.log(`✅ Oda kontrolü geçti - ${config.ROOM_NAME} odasına gönderiliyor`);
 
-        // İlgili odaya datayı aynen ilet (sadece DKRO0VSSVJ odasındaki kullanıcılar alır)
+        // İlgili odaya datayı aynen ilet (sadece config.ROOM_NAME odasındaki kullanıcılar alır)
         // io.to() zaten sadece o odadaki kullanıcılara gönderir
-        // Backend'de sadece DKRO0VSSVJ odasına veri gönderiliyor, başka odaya gönderilmiyor
+        // Backend'de sadece config.ROOM_NAME odasına veri gönderiliyor, başka odaya gönderilmiyor
         io.to(roomCode).emit("transaction-update", {
           type,
           data: payload
