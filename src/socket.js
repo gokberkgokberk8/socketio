@@ -75,8 +75,10 @@ export default function initSocket(io) {
         const userCount = room ? room.size : 0;
         console.log(`👥 ${roomCode} odasında ${userCount} kullanıcı var`);
 
+        // Odada kullanıcı yoksa veri gönderme
         if (userCount === 0) {
-          console.warn(`⚠️ ${roomCode} odasında hiç kullanıcı yok!`);
+          console.warn(`⚠️ ${roomCode} odasında hiç kullanıcı yok! Veri gönderilmiyor.`);
+          return;
         }
 
         // Sadece DKRO0VSSVJ odasına gönder (güvenlik kontrolü)
@@ -92,6 +94,8 @@ export default function initSocket(io) {
         console.log("✅ Oda kontrolü geçti - DKRO0VSSVJ odasına gönderiliyor");
 
         // İlgili odaya datayı aynen ilet (sadece DKRO0VSSVJ odasındaki kullanıcılar alır)
+        // io.to() zaten sadece o odadaki kullanıcılara gönderir
+        // Backend'de sadece DKRO0VSSVJ odasına veri gönderiliyor, başka odaya gönderilmiyor
         io.to(roomCode).emit("transaction-update", {
           type,
           data: payload
