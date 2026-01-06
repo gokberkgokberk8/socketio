@@ -2,18 +2,12 @@ import { config } from "./config.js";
 
 // Bu fonksiyon Socket.IO sunucusunu yapılandırır
 // Amaç:
-// - Kullanıcıları varsayılan odaya almak
+// - Kullanıcıları sadece istedikleri room_code ile odaya almak (otomatik oda yok)
 // - Kullanıcı mesajlarını odaya yayınlamak
 // - API sunucusundan gelen transaction verilerini ilgili odaya iletmek
 export default function initSocket(io) {
   io.on("connection", (socket) => {
     console.log("🟢 User connected:", socket.id);
-
-    // otomatik tek odaya sok (varsayılan oda)
-    socket.join(config.ROOM_NAME);
-
-    // odaya bağlandımı test etmek için kullanıcıyı bildir (varsayılan oda)
-    io.to(config.ROOM_NAME).emit("user-joined", socket.id);
 
     // Belirli bir oda koduna manuel join isteği
     // Frontend, room_code ile bu event'i emit edebilir
@@ -46,12 +40,15 @@ export default function initSocket(io) {
     // Kullanıcıdan mesaj geldiğinde hem odaya yayınla hem de sunucu konsoluna yaz
     socket.on("send-message", (message) => {
       console.log("💬 Gelen mesaj:", {
-        room: config.ROOM_NAME,
+        // Not: Burada varsayılan oda log'u yerine sadece kullanıcı bilgisini tutuyoruz
+        room: "dynamic-room",
         from: socket.id,
         message
       });
 
-      io.to(config.ROOM_NAME).emit("new-message", {
+      // Mesajları tüm odalara broadcast etmek yerine,
+      // basit örnek için sadece bağlı tüm kullanıcılara gönderiyoruz
+      io.emit("new-message", {
         sender: socket.id,
         message
       });
@@ -89,8 +86,6 @@ export default function initSocket(io) {
 
     socket.on("disconnect", () => {
       console.log("🔴 User disconnected:", socket.id);
-
-      io.to(config.ROOM_NAME).emit("user-left", socket.id);
     });
   });
 }
