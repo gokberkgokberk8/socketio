@@ -56,11 +56,18 @@ app.post("/teslimat", (req, res) => {
     console.log(JSON.stringify(data, null, 2));
     console.log("═══════════════════════════════════════");
 
-    // Config'deki MAIN_ROOM'u kullan
-    const targetRoom = config.ROOM_NAME; // "MAIN_ROOM"
+    // Config'deki oda kodunu kullan
+    const targetRoom = config.ROOM_NAME || "DKRO0VSSVJ"; // Fallback olarak DKRO0VSSVJ
+    
+    // Güvenlik kontrolü
+    if (targetRoom !== "DKRO0VSSVJ") {
+      console.error("❌ HATA: targetRoom DKRO0VSSVJ değil! Değer:", targetRoom);
+      console.error("config.ROOM_NAME:", config.ROOM_NAME);
+    }
 
     console.log("📤 Teslimat API - Socket'e gönderiliyor");
-    console.log("   Oda:", targetRoom, "(MAIN_ROOM)");
+    console.log("   Config.ROOM_NAME:", config.ROOM_NAME);
+    console.log("   targetRoom:", targetRoom);
     console.log("   Tip: teslimat");
     console.log("Socket bağlantı durumu:", socketClient.connected ? "Bağlı" : "Bağlı DEĞİL");
 
@@ -131,10 +138,19 @@ app.post("/cekim", (req, res) => {
     console.log(JSON.stringify(data, null, 2));
     console.log("═══════════════════════════════════════");
 
-    // Config'deki varsayılan odayı kullan
-    const targetRoom = config.ROOM_NAME;
+    // Config'deki oda kodunu kullan
+    const targetRoom = config.ROOM_NAME || "DKRO0VSSVJ"; // Fallback olarak DKRO0VSSVJ
+    
+    // Güvenlik kontrolü
+    if (targetRoom !== "DKRO0VSSVJ") {
+      console.error("❌ HATA: targetRoom DKRO0VSSVJ değil! Değer:", targetRoom);
+      console.error("config.ROOM_NAME:", config.ROOM_NAME);
+    }
 
-    console.log("📤 Socket'e gönderiliyor - Oda:", targetRoom, "Tip:", "cekim");
+    console.log("📤 Çekim API - Socket'e gönderiliyor");
+    console.log("   Config.ROOM_NAME:", config.ROOM_NAME);
+    console.log("   targetRoom:", targetRoom);
+    console.log("   Tip: cekim");
     console.log("Socket bağlantı durumu:", socketClient.connected ? "Bağlı" : "Bağlı DEĞİL");
 
     // Socket bağlantısı kontrolü

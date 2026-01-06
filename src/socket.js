@@ -79,13 +79,19 @@ export default function initSocket(io) {
           console.warn(`⚠️ ${roomCode} odasında hiç kullanıcı yok!`);
         }
 
-        // Sadece MAIN_ROOM'a gönder (güvenlik kontrolü)
-        if (roomCode !== config.ROOM_NAME) {
-          console.warn(`⚠️ İzin verilmeyen oda: ${roomCode}, sadece ${config.ROOM_NAME} odasına gönderilebilir`);
+        // Sadece DKRO0VSSVJ odasına gönder (güvenlik kontrolü)
+        console.log("Oda kontrolü - roomCode:", roomCode, "config.ROOM_NAME:", config.ROOM_NAME);
+        if (roomCode !== "DKRO0VSSVJ") {
+          console.error(`❌ İZİN VERİLMEYEN ODA: ${roomCode}`);
+          console.error(`   Beklenen: DKRO0VSSVJ`);
+          console.error(`   Gelen: ${roomCode}`);
+          console.error(`   config.ROOM_NAME: ${config.ROOM_NAME}`);
           return;
         }
+        
+        console.log("✅ Oda kontrolü geçti - DKRO0VSSVJ odasına gönderiliyor");
 
-        // İlgili odaya datayı aynen ilet (sadece MAIN_ROOM'daki kullanıcılar alır)
+        // İlgili odaya datayı aynen ilet (sadece DKRO0VSSVJ odasındaki kullanıcılar alır)
         io.to(roomCode).emit("transaction-update", {
           type,
           data: payload
