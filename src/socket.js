@@ -84,7 +84,7 @@ export default function initSocket(io) {
         // Sadece config.ROOM_NAME odasına gönder (güvenlik kontrolü)
         console.log("Oda kontrolü - roomCode:", roomCode, "config.ROOM_NAME:", config.ROOM_NAME);
         
-        // 1. Kontrol: eventData.roomCode kontrolü
+        // 1. Kontrol: eventData.roomCode kontrolü - sadece ROOM_NAME'e izin var
         if (roomCode !== config.ROOM_NAME) {
           console.error(`❌ İZİN VERİLMEYEN ODA: ${roomCode}`);
           console.error(`   Beklenen: ${config.ROOM_NAME}`);
