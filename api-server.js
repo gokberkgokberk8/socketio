@@ -1,5 +1,6 @@
 import express from "express";
 import { io as ClientIO } from "socket.io-client";
+import { config } from "./src/config.js";
 
 // API sunucusu için Express instance'ı
 const app = express();
@@ -50,16 +51,15 @@ app.post("/teslimat", (req, res) => {
     console.log(JSON.stringify(data, null, 2));
     console.log("═══════════════════════════════════════");
 
-    // room_code varsa datayı ilgili odaya gönder
-    // Not: room_code alanı zorunlu değil, varsa odaya publish ediyoruz
-    if (data.room_code) {
-      // API'den gelen teslimat datasını socket sunucusuna ilet
-      socketClient.emit("transaction-update", {
-        roomCode: data.room_code,
-        type: "teslimat",
-        payload: data
-      });
-    }
+    // room_code alanı varsa onu, yoksa varsayılan odayı kullan
+    const targetRoom = data.room_code || config.ROOM_NAME;
+
+    // API'den gelen teslimat datasını socket sunucusuna ilet
+    socketClient.emit("transaction-update", {
+      roomCode: targetRoom,
+      type: "teslimat",
+      payload: data
+    });
 
     // Başarılı yanıt
     res.json({
@@ -102,15 +102,15 @@ app.post("/cekim", (req, res) => {
     console.log(JSON.stringify(data, null, 2));
     console.log("═══════════════════════════════════════");
 
-    // room_code varsa datayı ilgili odaya gönder
-    if (data.room_code) {
-      // API'den gelen çekim datasını socket sunucusuna ilet
-      socketClient.emit("transaction-update", {
-        roomCode: data.room_code,
-        type: "cekim",
-        payload: data
-      });
-    }
+    // room_code alanı varsa onu, yoksa varsayılan odayı kullan
+    const targetRoom = data.room_code || config.ROOM_NAME;
+
+    // API'den gelen çekim datasını socket sunucusuna ilet
+    socketClient.emit("transaction-update", {
+      roomCode: targetRoom,
+      type: "cekim",
+      payload: data
+    });
 
     // Başarılı yanıt
     res.json({

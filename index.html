@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Socket Test</title>
+
+</head>
+<body>
+  <h1>Socket Test</h1>
+  <input id="msg" placeholder="Mesaj yaz" />
+  <button onclick="send()">Gönder</button>
+
+  <h2>Log</h2>
+  <ul id="log"></ul>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script>
+    const socket = io("http://167.71.96.139:2999");
+    const ROOM_CODE = "DKR0OVSSVJ"; // Dinlemek istediğin oda kodu
+
+    socket.on("connect", () => {
+      log("🟢 Bağlandı: " + socket.id);
+
+      // Belirli odaya join ol (room_code)
+      socket.emit("join-room", ROOM_CODE);
+      log("🏠 Odaya join isteği gönderildi: " + ROOM_CODE);
+    });
+
+    // Sunucudan gelen normal mesajları dinle
+    socket.on("new-message", data => {
+      log("💬 " + data.sender + ": " + data.message);
+    });
+
+    // Sunucudan gelen transaction-update event'ini dinle
+    // Bu event, API'den gelen veriyi ilgili odaya publish ettiğimiz event
+    socket.on("transaction-update", payload => {
+      // payload = { type: "teslimat" | "cekim", data: {...} }
+      log("📦 Transaction (" + payload.type + ") alındı");
+      log(JSON.stringify(payload.data, null, 2));
+
+      // Gelen datayı developer console'da detaylı göster
+      console.log("📦 Transaction-update tipi:", payload.type);
+      console.log("📦 Transaction data (tam):", payload.data);
+      console.log("📌 Room code:", payload?.data?.room_code);
+    });
+
+    function send() {
+      const val = document.getElementById("msg").value;
+      socket.emit("send-message", val);
+    }
+
+    function log(text) {
+      const li = document.createElement("li");
+      li.innerText = text;
+      document.getElementById("log").appendChild(li);
+    }
+  </script>
+</body>
+</html>
