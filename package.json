@@ -2,11 +2,12 @@
   "name": "socketitesti",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "socket-server.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "socket": "node socket-server.js",
+    "api": "node api-server.js",
+    "start:all": "node socket-server.js & node api-server.js"
   },
   "keywords": [],
   "author": "",
