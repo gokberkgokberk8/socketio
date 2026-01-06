@@ -71,14 +71,22 @@ export default function initSocket(io) {
 
         console.log("📡 Transaction update alındı:", {
           roomCode,
-          type
+          type,
+          socketId: socket.id
         });
+
+        // Odada kaç kullanıcı var kontrol et
+        const room = io.sockets.adapter.rooms.get(roomCode);
+        const userCount = room ? room.size : 0;
+        console.log(`👥 ${roomCode} odasında ${userCount} kullanıcı var`);
 
         // İlgili odaya datayı aynen ilet
         io.to(roomCode).emit("transaction-update", {
           type,
           data: payload
         });
+
+        console.log(`✅ ${roomCode} odasına transaction-update gönderildi`);
       } catch (error) {
         console.error("❌ transaction-update işlenirken hata:", error);
       }

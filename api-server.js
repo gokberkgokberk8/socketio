@@ -51,8 +51,10 @@ app.post("/teslimat", (req, res) => {
     console.log(JSON.stringify(data, null, 2));
     console.log("═══════════════════════════════════════");
 
-    // room_code alanı varsa onu, yoksa varsayılan odayı kullan
-    const targetRoom = data.room_code || config.ROOM_NAME;
+    // room_code alanı varsa onu, yoksa varsayılan teslimat odasını kullan
+    const targetRoom = data.room_code || config.ROOM_NAME_TESLIMAT;
+
+    console.log("📤 Socket'e gönderiliyor - Oda:", targetRoom, "Tip:", "teslimat");
 
     // API'den gelen teslimat datasını socket sunucusuna ilet
     socketClient.emit("transaction-update", {
@@ -60,6 +62,8 @@ app.post("/teslimat", (req, res) => {
       type: "teslimat",
       payload: data
     });
+
+    console.log("✅ Socket'e gönderildi");
 
     // Başarılı yanıt
     res.json({
@@ -102,8 +106,8 @@ app.post("/cekim", (req, res) => {
     console.log(JSON.stringify(data, null, 2));
     console.log("═══════════════════════════════════════");
 
-    // room_code alanı varsa onu, yoksa varsayılan odayı kullan
-    const targetRoom = data.room_code || config.ROOM_NAME;
+    // room_code alanı varsa onu, yoksa varsayılan çekim odasını kullan
+    const targetRoom = data.room_code || config.ROOM_NAME_CEKIM;
 
     // API'den gelen çekim datasını socket sunucusuna ilet
     socketClient.emit("transaction-update", {
