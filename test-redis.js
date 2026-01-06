@@ -1,7 +1,11 @@
 // Redis bağlantı test scripti
 // DigitalOcean Redis'in çalışıp çalışmadığını kontrol eder
-import { createClient } from "ioredis";
+import Redis from "ioredis";
 import { redisConfig } from "./src/config.js";
+
+// ioredis CommonJS modülü olduğu için default import kullanıyoruz
+// ioredis'te createClient yok, direkt Redis class'ı var
+const createClient = (options) => new Redis(options);
 
 console.log("🔍 Redis bağlantısı test ediliyor...");
 console.log("═══════════════════════════════════════");

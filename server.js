@@ -2,9 +2,13 @@ import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
-import { createClient } from "ioredis";
+import Redis from "ioredis";
 import { config, redisConfig } from "./src/config.js";
 import initSocket from "./src/socket.js";
+
+// ioredis CommonJS modülü olduğu için default import kullanıyoruz
+// ioredis'te createClient yok, direkt Redis class'ı var
+const createClient = (options) => new Redis(options);
 
 const app = express();
 
