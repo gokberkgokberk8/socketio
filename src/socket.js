@@ -11,6 +11,9 @@ export default function initSocket(io) {
 
     // otomatik tek odaya sok
     socket.join(config.ROOM_NAME);
+    
+    // Kullanıcının dinlediği odayı console'da göster
+    console.log(`📡 Kullanıcı ${socket.id} şu odayı dinliyor: ${config.ROOM_NAME}`);
 
     // odaya bağlandımı test etmek için kullanıcıyı bildir
     io.to(config.ROOM_NAME).emit("user-joined", socket.id);
@@ -106,6 +109,7 @@ export default function initSocket(io) {
 
     socket.on("disconnect", () => {
       console.log("🔴 User disconnected:", socket.id);
+      console.log(`📡 Kullanıcı ${socket.id} şu odadan çıktı: ${config.ROOM_NAME}`);
 
       io.to(config.ROOM_NAME).emit("user-left", socket.id);
     });
