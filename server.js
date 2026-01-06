@@ -1,7 +1,9 @@
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
-import { config } from "./src/config.js";
+import { createAdapter } from "@socket.io/redis-adapter";
+import { createClient } from "ioredis";
+import { config, redisConfig } from "./src/config.js";
 import initSocket from "./src/socket.js";
 
 const app = express();
@@ -25,6 +27,81 @@ const io = new Server(server, {
   transports: ["websocket", "polling"] // WebSocket öncelikli
 });
 
+// Redis adapter yapılandırması - DigitalOcean Redis için
+// Redis adapter, birden fazla Socket.IO instance'ı arasında mesaj paylaşımı sağlar
+async function setupRedisAdapter() {
+  try {
+    // Redis pub/sub client'ları oluştur
+    // Socket.IO Redis adapter iki client gerektirir: pub ve sub
+    const pubClient = createClient({
+      host: redisConfig.host,
+      port: redisConfig.port,
+      password: redisConfig.password,
+      tls: redisConfig.tls,
+      retryStrategy: redisConfig.retryStrategy,
+      maxRetriesPerRequest: redisConfig.maxRetriesPerRequest,
+      enableReadyCheck: redisConfig.enableReadyCheck,
+      lazyConnect: redisConfig.lazyConnect
+    });
+
+    const subClient = pubClient.duplicate();
+
+    // Redis bağlantı hatalarını yakala
+    pubClient.on("error", (err) => {
+      console.error("❌ Redis Pub Client hatası:", err);
+    });
+
+    subClient.on("error", (err) => {
+      console.error("❌ Redis Sub Client hatası:", err);
+    });
+
+    // Redis bağlantı başarılı olduğunda
+    pubClient.on("connect", () => {
+      console.log("✅ Redis Pub Client bağlandı");
+    });
+
+    subClient.on("connect", () => {
+      console.log("✅ Redis Sub Client bağlandı");
+    });
+
+    // Redis bağlantılarını başlat (ioredis otomatik bağlanır, ready event'ini bekliyoruz)
+    // lazyConnect: true ise manuel bağlanmak gerekir, false ise otomatik bağlanır
+    if (redisConfig.lazyConnect) {
+      await Promise.all([
+        pubClient.connect().catch(err => console.error("Pub connect hatası:", err)),
+        subClient.connect().catch(err => console.error("Sub connect hatası:", err))
+      ]);
+    } else {
+      // Otomatik bağlantı için ready event'ini bekle
+      await Promise.all([
+        new Promise((resolve, reject) => {
+          pubClient.once("ready", resolve);
+          pubClient.once("error", reject);
+        }).catch(err => console.error("Pub ready hatası:", err)),
+        new Promise((resolve, reject) => {
+          subClient.once("ready", resolve);
+          subClient.once("error", reject);
+        }).catch(err => console.error("Sub ready hatası:", err))
+      ]);
+    }
+
+    // Socket.IO'ya Redis adapter'ı ekle
+    io.adapter(createAdapter(pubClient, subClient));
+    
+    console.log("🔴 Redis Adapter aktif - Multi-instance desteği hazır");
+    console.log(`   Redis: ${redisConfig.host}:${redisConfig.port}`);
+    
+    return { pubClient, subClient };
+  } catch (error) {
+    console.error("❌ Redis adapter kurulumu başarısız:", error);
+    console.warn("⚠️  Redis olmadan devam ediliyor (single instance modu)");
+    // Redis bağlantısı başarısız olsa bile sunucu çalışmaya devam eder
+    return null;
+  }
+}
+
+// Redis adapter'ı başlat
+setupRedisAdapter();
 
 initSocket(io);
 
@@ -126,6 +203,12 @@ setInterval(() => {
 }, 30000); // 30 saniyede bir
 
 server.listen(config.PORT, () => {
-  console.log(`🚀 Server ${config.PORT} portunda`);
+  const instanceId = process.env.NODE_APP_INSTANCE || process.env.pm_id || "single";
+  console.log("═══════════════════════════════════════");
+  console.log(`🚀 Socket.IO Server başlatıldı`);
+  console.log(`📡 Port: ${config.PORT}`);
+  console.log(`🆔 Instance ID: ${instanceId}`);
   console.log(`💾 RAM: ${Math.round(process.memoryUsage().rss / 1024 / 1024)} MB`);
+  console.log(`🔴 Redis: ${redisConfig.host}:${redisConfig.port}`);
+  console.log("═══════════════════════════════════════");
 });
