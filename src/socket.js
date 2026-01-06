@@ -9,33 +9,11 @@ export default function initSocket(io) {
   io.on("connection", (socket) => {
     console.log("🟢 User connected:", socket.id);
 
-    // Belirli bir oda koduna manuel join isteği
-    // Frontend, room_code ile bu event'i emit edebilir
-    socket.on("join-room", (roomCode) => {
-      try {
-        // Geçersiz roomCode gelirse işlem yapma
-        if (!roomCode || typeof roomCode !== "string") {
-          console.log("⚠️  Geçersiz join-room isteği:", roomCode);
-          return;
-        }
+    // otomatik tek odaya sok
+    socket.join(config.ROOM_NAME);
 
-        // İlgili odaya join et
-        socket.join(roomCode);
-
-        console.log("🏠 Kullanıcı odaya katıldı:", {
-          socketId: socket.id,
-          roomCode
-        });
-
-        // Odaya bilgi mesajı gönder
-        io.to(roomCode).emit("room-joined", {
-          socketId: socket.id,
-          roomCode
-        });
-      } catch (error) {
-        console.error("❌ join-room işlenirken hata:", error);
-      }
-    });
+    // odaya bağlandımı test etmek için kullanıcıyı bildir
+    io.to(config.ROOM_NAME).emit("user-joined", socket.id);
 
     // Kullanıcıdan mesaj geldiğinde hem odaya yayınla hem de sunucu konsoluna yaz
     socket.on("send-message", (message) => {
@@ -60,7 +38,10 @@ export default function initSocket(io) {
     // payload: API'den gelen orijinal data
     socket.on("transaction-update", (eventData) => {
       try {
-        console.log("🔔 transaction-update event alindi (raw):", eventData);
+        console.log("========================================");
+        console.log("🔔 TRANSACTION-UPDATE EVENT ALINDI");
+        console.log("Socket ID:", socket.id);
+        console.log("Event data (raw):", JSON.stringify(eventData, null, 2));
         console.log("Event data type:", typeof eventData);
         console.log("Event data keys:", eventData ? Object.keys(eventData) : "null");
 
@@ -98,7 +79,13 @@ export default function initSocket(io) {
           console.warn(`⚠️ ${roomCode} odasında hiç kullanıcı yok!`);
         }
 
-        // İlgili odaya datayı aynen ilet
+        // Sadece MAIN_ROOM'a gönder (güvenlik kontrolü)
+        if (roomCode !== config.ROOM_NAME) {
+          console.warn(`⚠️ İzin verilmeyen oda: ${roomCode}, sadece ${config.ROOM_NAME} odasına gönderilebilir`);
+          return;
+        }
+
+        // İlgili odaya datayı aynen ilet (sadece MAIN_ROOM'daki kullanıcılar alır)
         io.to(roomCode).emit("transaction-update", {
           type,
           data: payload
@@ -109,14 +96,18 @@ export default function initSocket(io) {
           type,
           dataKeys: payload ? Object.keys(payload) : "payload yok"
         });
+        console.log("========================================");
       } catch (error) {
         console.error("❌ transaction-update işlenirken hata:", error);
         console.error("Error stack:", error.stack);
+        console.log("========================================");
       }
     });
 
     socket.on("disconnect", () => {
       console.log("🔴 User disconnected:", socket.id);
+
+      io.to(config.ROOM_NAME).emit("user-left", socket.id);
     });
   });
 }

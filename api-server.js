@@ -18,10 +18,15 @@ const socketClient = ClientIO("http://localhost:2999", {
 // Socket bağlantı durumlarını logla (debug için)
 socketClient.on("connect", () => {
   console.log("🔗 API -> Socket bağlantısı kuruldu. ID:", socketClient.id);
+  console.log("✅ API sunucusu socket sunucusuna bağlandı, veri gönderebilir");
 });
 
 socketClient.on("disconnect", (reason) => {
   console.log("⚠️  API -> Socket bağlantısı koptu:", reason);
+});
+
+socketClient.on("connect_error", (error) => {
+  console.error("❌ API -> Socket bağlantı hatası:", error.message);
 });
 
 // API Endpoint'leri
@@ -51,10 +56,12 @@ app.post("/teslimat", (req, res) => {
     console.log(JSON.stringify(data, null, 2));
     console.log("═══════════════════════════════════════");
 
-    // Config'deki teslimat odasını kullan (data.room_code'u dikkate alma)
-    const targetRoom = config.ROOM_NAME_TESLIMAT;
+    // Config'deki MAIN_ROOM'u kullan
+    const targetRoom = config.ROOM_NAME; // "MAIN_ROOM"
 
-    console.log("📤 Socket'e gönderiliyor - Oda:", targetRoom, "Tip:", "teslimat");
+    console.log("📤 Teslimat API - Socket'e gönderiliyor");
+    console.log("   Oda:", targetRoom, "(MAIN_ROOM)");
+    console.log("   Tip: teslimat");
     console.log("Socket bağlantı durumu:", socketClient.connected ? "Bağlı" : "Bağlı DEĞİL");
 
     // Socket bağlantısı kontrolü
@@ -67,13 +74,21 @@ app.post("/teslimat", (req, res) => {
     }
 
     // API'den gelen teslimat datasını socket sunucusuna ilet
-    socketClient.emit("transaction-update", {
+    const emitData = {
       roomCode: targetRoom,
       type: "teslimat",
       payload: data
+    };
+
+    console.log("📤 Emit edilecek data:", {
+      roomCode: emitData.roomCode,
+      type: emitData.type,
+      payloadKeys: Object.keys(emitData.payload)
     });
 
-    console.log("✅ Socket'e gönderildi - roomCode:", targetRoom, "payload keys:", Object.keys(data));
+    socketClient.emit("transaction-update", emitData);
+
+    console.log("✅ Socket'e emit edildi - roomCode:", targetRoom);
 
     // Başarılı yanıt
     res.json({
@@ -116,8 +131,8 @@ app.post("/cekim", (req, res) => {
     console.log(JSON.stringify(data, null, 2));
     console.log("═══════════════════════════════════════");
 
-    // Config'deki çekim odasını kullan (data.room_code'u dikkate alma)
-    const targetRoom = config.ROOM_NAME_CEKIM;
+    // Config'deki varsayılan odayı kullan
+    const targetRoom = config.ROOM_NAME;
 
     console.log("📤 Socket'e gönderiliyor - Oda:", targetRoom, "Tip:", "cekim");
     console.log("Socket bağlantı durumu:", socketClient.connected ? "Bağlı" : "Bağlı DEĞİL");
