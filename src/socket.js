@@ -58,13 +58,26 @@ export default function initSocket(io) {
     // roomCode: hangi odaya gönderileceği
     // type: "teslimat" | "cekim"
     // payload: API'den gelen orijinal data
-    socket.on("transaction-update", ({ roomCode, type, payload }) => {
+    socket.on("transaction-update", (eventData) => {
       try {
+        console.log("🔔 transaction-update event alindi (raw):", eventData);
+        console.log("Event data type:", typeof eventData);
+        console.log("Event data keys:", eventData ? Object.keys(eventData) : "null");
+
+        // Destructure kontrolü
+        if (!eventData || typeof eventData !== "object") {
+          console.error("❌ Geçersiz event data formatı:", eventData);
+          return;
+        }
+
+        const { roomCode, type, payload } = eventData;
+
         // roomCode yoksa işlem yapma
         if (!roomCode) {
           console.log("⚠️  Geçersiz transaction-update (roomCode yok):", {
             type,
-            payload
+            payload,
+            eventData
           });
           return;
         }
@@ -72,13 +85,18 @@ export default function initSocket(io) {
         console.log("📡 Transaction update alındı:", {
           roomCode,
           type,
-          socketId: socket.id
+          socketId: socket.id,
+          payloadKeys: payload ? Object.keys(payload) : "payload yok"
         });
 
         // Odada kaç kullanıcı var kontrol et
         const room = io.sockets.adapter.rooms.get(roomCode);
         const userCount = room ? room.size : 0;
         console.log(`👥 ${roomCode} odasında ${userCount} kullanıcı var`);
+
+        if (userCount === 0) {
+          console.warn(`⚠️ ${roomCode} odasında hiç kullanıcı yok!`);
+        }
 
         // İlgili odaya datayı aynen ilet
         io.to(roomCode).emit("transaction-update", {
@@ -87,8 +105,13 @@ export default function initSocket(io) {
         });
 
         console.log(`✅ ${roomCode} odasına transaction-update gönderildi`);
+        console.log("Gönderilen data:", {
+          type,
+          dataKeys: payload ? Object.keys(payload) : "payload yok"
+        });
       } catch (error) {
         console.error("❌ transaction-update işlenirken hata:", error);
+        console.error("Error stack:", error.stack);
       }
     });
 

@@ -51,10 +51,20 @@ app.post("/teslimat", (req, res) => {
     console.log(JSON.stringify(data, null, 2));
     console.log("═══════════════════════════════════════");
 
-    // room_code alanı varsa onu, yoksa varsayılan teslimat odasını kullan
-    const targetRoom = data.room_code || config.ROOM_NAME_TESLIMAT;
+    // Config'deki teslimat odasını kullan (data.room_code'u dikkate alma)
+    const targetRoom = config.ROOM_NAME_TESLIMAT;
 
     console.log("📤 Socket'e gönderiliyor - Oda:", targetRoom, "Tip:", "teslimat");
+    console.log("Socket bağlantı durumu:", socketClient.connected ? "Bağlı" : "Bağlı DEĞİL");
+
+    // Socket bağlantısı kontrolü
+    if (!socketClient.connected) {
+      console.error("❌ Socket bağlantısı yok! Veri gönderilemedi.");
+      return res.status(500).json({
+        success: false,
+        message: "Socket bağlantısı kurulamadı"
+      });
+    }
 
     // API'den gelen teslimat datasını socket sunucusuna ilet
     socketClient.emit("transaction-update", {
@@ -63,7 +73,7 @@ app.post("/teslimat", (req, res) => {
       payload: data
     });
 
-    console.log("✅ Socket'e gönderildi");
+    console.log("✅ Socket'e gönderildi - roomCode:", targetRoom, "payload keys:", Object.keys(data));
 
     // Başarılı yanıt
     res.json({
@@ -106,8 +116,20 @@ app.post("/cekim", (req, res) => {
     console.log(JSON.stringify(data, null, 2));
     console.log("═══════════════════════════════════════");
 
-    // room_code alanı varsa onu, yoksa varsayılan çekim odasını kullan
-    const targetRoom = data.room_code || config.ROOM_NAME_CEKIM;
+    // Config'deki çekim odasını kullan (data.room_code'u dikkate alma)
+    const targetRoom = config.ROOM_NAME_CEKIM;
+
+    console.log("📤 Socket'e gönderiliyor - Oda:", targetRoom, "Tip:", "cekim");
+    console.log("Socket bağlantı durumu:", socketClient.connected ? "Bağlı" : "Bağlı DEĞİL");
+
+    // Socket bağlantısı kontrolü
+    if (!socketClient.connected) {
+      console.error("❌ Socket bağlantısı yok! Veri gönderilemedi.");
+      return res.status(500).json({
+        success: false,
+        message: "Socket bağlantısı kurulamadı"
+      });
+    }
 
     // API'den gelen çekim datasını socket sunucusuna ilet
     socketClient.emit("transaction-update", {
@@ -115,6 +137,8 @@ app.post("/cekim", (req, res) => {
       type: "cekim",
       payload: data
     });
+
+    console.log("✅ Socket'e gönderildi - roomCode:", targetRoom);
 
     // Başarılı yanıt
     res.json({
