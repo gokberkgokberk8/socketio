@@ -1,5 +1,3 @@
-import { config } from "./config.js";
-
 // Bu fonksiyon Socket.IO sunucusunu yapılandırır
 // Amaç:
 // - Kullanıcıları sadece istedikleri room_code ile odaya almak (otomatik oda yok)
@@ -13,73 +11,76 @@ export default function initSocket(io) {
     // join-room event'i ile odaya katılabilirler
 
     // Kullanıcıların manuel olarak odaya join olması için event handler
+    // Dinamik room_code yapısı - kullanıcı hangi roomName ile gelirse o odaya join olabilir
     socket.on("join-room", (roomName) => {
-      // Sadece ROOM_NAME veya ROOM_NAME2 odalarına izin ver
-      if (roomName === config.ROOM_NAME || roomName === config.ROOM_NAME2) {
-        socket.join(roomName);
-        console.log(`📡 Kullanıcı ${socket.id} şu odaya join oldu: ${roomName}`);
-        // Kullanıcıya bildir
-        socket.emit("room-joined", { room: roomName, socketId: socket.id });
-      } else {
-        console.warn(`⚠️ Kullanıcı ${socket.id} izin verilmeyen odaya join olmaya çalıştı: ${roomName}`);
+      if (!roomName) {
+        console.warn(`⚠️ Kullanıcı ${socket.id} boş oda adı ile join olmaya çalıştı`);
         socket.emit("room-join-error", { 
-          message: `İzin verilmeyen oda: ${roomName}. Sadece ${config.ROOM_NAME} veya ${config.ROOM_NAME2} odalarına join olabilirsiniz.` 
+          message: "Oda adı gereklidir" 
         });
+        return;
       }
+      
+      socket.join(roomName);
+      console.log(`📡 Kullanıcı ${socket.id} şu odaya join oldu: ${roomName}`);
+      // Kullanıcıya bildir
+      socket.emit("room-joined", { room: roomName, socketId: socket.id });
     });
 
-    // Kullanıcıdan mesaj geldiğinde hem odaya yayınla hem de sunucu konsoluna yaz
-    socket.on("send-message", (message) => {
+    // Kullanıcıdan mesaj geldiğinde sadece ilgili odaya gönder
+    // Dinamik room_code yapısı - mesaj sadece belirtilen odaya gönderilir
+    socket.on("send-message", (messageData) => {
+      // messageData hem mesaj hem de roomCode içerebilir
+      const { message, roomCode } = typeof messageData === "string" 
+        ? { message: messageData, roomCode: null } 
+        : messageData;
+
+      if (!roomCode) {
+        console.warn(`⚠️ Kullanıcı ${socket.id} roomCode olmadan mesaj göndermeye çalıştı`);
+        socket.emit("message-error", { 
+          message: "Mesaj göndermek için roomCode gereklidir" 
+        });
+        return;
+      }
+
       console.log("💬 Gelen mesaj:", {
-        // Not: Burada varsayılan oda log'u yerine sadece kullanıcı bilgisini tutuyoruz
-        room: "dynamic-room",
+        room: roomCode,
         from: socket.id,
         message
       });
 
-      // Mesajları tüm odalara broadcast etmek yerine,
-      // basit örnek için sadece bağlı tüm kullanıcılara gönderiyoruz
-      io.emit("new-message", {
+      // Mesajı sadece ilgili odaya gönder
+      io.to(roomCode).emit("new-message", {
         sender: socket.id,
+        room: roomCode,
         message
       });
     });
 
     // API sunucusundan gelen transaction event'i
-    // roomCode: hangi odaya gönderileceği
-    // type: "teslimat" | "cekim"
+    // roomCode: hangi odaya gönderileceği (dinamik)
+    // type: "teslimat" | "cekim" | "yatirim"
     // payload: API'den gelen orijinal data
     socket.on("transaction-update", (eventData) => {
       try {
         // Destructure kontrolü
         if (!eventData || typeof eventData !== "object") {
-          return; // Geçersiz veri, log tutmuyoruz
+          return; // Geçersiz veri
         }
 
         const { roomCode, type, payload } = eventData;
 
-        // roomCode yoksa işlem yapma (log tutmuyoruz)
+        // roomCode yoksa işlem yapma
         if (!roomCode) {
+          console.warn("⚠️ transaction-update: roomCode eksik");
           return;
         }
 
-        // 1. Kontrol: eventData.roomCode kontrolü - sadece ROOM_NAME'e izin var
-        // Diğer odalardan gelen veriler için log tutmuyoruz
-        if (roomCode !== config.ROOM_NAME) {
-          return; // Diğer odalardan gelen veri, log tutmuyoruz
-        }
-        
-        // 2. Kontrol: payload.data.room_code kontrolü (ekstra güvenlik)
-        const payloadRoomCode = payload?.data?.room_code;
-        if (payloadRoomCode && payloadRoomCode !== config.ROOM_NAME) {
-          return; // Payload içinde yanlış oda kodu, log tutmuyoruz
-        }
-
-        // Sadece doğru odadan gelen veriler için log tutuyoruz
+        // Dinamik room_code yapısı - gelen roomCode neyse o odaya gönderilir
         console.log("========================================");
         console.log("🔔 TRANSACTION-UPDATE EVENT ALINDI");
         console.log("Socket ID:", socket.id);
-        console.log("Oda:", roomCode);
+        console.log("Oda (dinamik):", roomCode);
         console.log("Tip:", type);
         console.log("Event data:", JSON.stringify(eventData, null, 2));
 
@@ -93,12 +94,8 @@ export default function initSocket(io) {
           console.warn(`⚠️ ${roomCode} odasında hiç kullanıcı yok! Veri gönderilmiyor.`);
           return;
         }
-        
-        console.log(`✅ ${config.ROOM_NAME} odasına gönderiliyor`);
 
-        // İlgili odaya datayı aynen ilet (sadece config.ROOM_NAME odasındaki kullanıcılar alır)
-        // io.to() zaten sadece o odadaki kullanıcılara gönderir
-        // Kesinlikle sadece config.ROOM_NAME odasına gönderiliyor, başka odaya gönderilmiyor
+        // İlgili odaya datayı aynen ilet - sadece belirtilen roomCode'daki kullanıcılar alır
         io.to(roomCode).emit("transaction-update", {
           type,
           data: payload

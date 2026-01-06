@@ -1,6 +1,5 @@
 import express from "express";
 import { io as ClientIO } from "socket.io-client";
-import { config } from "./src/config.js";
 
 // API sunucusu için Express instance'ı
 const app = express();
@@ -56,36 +55,17 @@ app.post("/teslimat", (req, res) => {
     console.log(JSON.stringify(data, null, 2));
     console.log("═══════════════════════════════════════");
 
-    // Her zaman config.ROOM_NAME odasına gönder (sabit oda)
-    const targetRoom = config.ROOM_NAME;
+    // Dinamik room_code kullan - gelen data.room_code neyse o kullanılacak
+    const targetRoom = data.room_code;
     
     if (!targetRoom) {
-      console.error("❌ HATA: config.ROOM_NAME tanımlı değil!");
-      return res.status(500).json({ success: false, message: "Oda kodu tanımlı değil" });
+      console.error("❌ HATA: data.room_code tanımlı değil!");
+      return res.status(400).json({ success: false, message: "room_code parametresi gereklidir" });
     }
-
-    // Gelen verideki room_code kontrolü - yanlışsa reddet
-    if (data.room_code && data.room_code !== config.ROOM_NAME) {
-      console.error(`❌ YANLIŞ ODA KODU GELDİ: ${data.room_code}`);
-      console.error(`   Beklenen: ${config.ROOM_NAME}`);
-      console.error(`   Gelen: ${data.room_code}`);
-      console.error(`   Veri reddedildi - sadece ${config.ROOM_NAME} odasına izin var`);
-      return res.status(400).json({ 
-        success: false, 
-        message: `Yanlış oda kodu. Sadece ${config.ROOM_NAME} odasına izin var.`,
-        received_room_code: data.room_code,
-        expected_room_code: config.ROOM_NAME
-      });
-    }
-
-    // data.room_code'u config.ROOM_NAME ile override et (her zaman doğru oda kodu gönderilsin)
-    data.room_code = config.ROOM_NAME;
 
     console.log("📤 Teslimat API - Socket'e gönderiliyor");
-    console.log("   Config.ROOM_NAME:", config.ROOM_NAME);
-    console.log("   targetRoom:", targetRoom);
+    console.log("   targetRoom (dinamik):", targetRoom);
     console.log("   Tip: teslimat");
-    console.log("   NOT: Tüm veriler otomatik olarak bu odaya gönderiliyor");
     console.log("Socket bağlantı durumu:", socketClient.connected ? "Bağlı" : "Bağlı DEĞİL");
 
     // Socket bağlantısı kontrolü
@@ -155,36 +135,17 @@ app.post("/cekim", (req, res) => {
     console.log(JSON.stringify(data, null, 2));
     console.log("═══════════════════════════════════════");
 
-    // Her zaman config.ROOM_NAME odasına gönder (sabit oda)
-    const targetRoom = config.ROOM_NAME;
+    // Dinamik room_code kullan - gelen data.room_code neyse o kullanılacak
+    const targetRoom = data.room_code;
     
     if (!targetRoom) {
-      console.error("❌ HATA: config.ROOM_NAME tanımlı değil!");
-      return res.status(500).json({ success: false, message: "Oda kodu tanımlı değil" });
+      console.error("❌ HATA: data.room_code tanımlı değil!");
+      return res.status(400).json({ success: false, message: "room_code parametresi gereklidir" });
     }
-
-    // Gelen verideki room_code kontrolü - yanlışsa reddet
-    if (data.room_code && data.room_code !== config.ROOM_NAME) {
-      console.error(`❌ YANLIŞ ODA KODU GELDİ: ${data.room_code}`);
-      console.error(`   Beklenen: ${config.ROOM_NAME}`);
-      console.error(`   Gelen: ${data.room_code}`);
-      console.error(`   Veri reddedildi - sadece ${config.ROOM_NAME} odasına izin var`);
-      return res.status(400).json({ 
-        success: false, 
-        message: `Yanlış oda kodu. Sadece ${config.ROOM_NAME} odasına izin var.`,
-        received_room_code: data.room_code,
-        expected_room_code: config.ROOM_NAME
-      });
-    }
-
-    // data.room_code'u config.ROOM_NAME ile override et (her zaman doğru oda kodu gönderilsin)
-    data.room_code = config.ROOM_NAME;
 
     console.log("📤 Çekim API - Socket'e gönderiliyor");
-    console.log("   Config.ROOM_NAME:", config.ROOM_NAME);
-    console.log("   targetRoom:", targetRoom);
+    console.log("   targetRoom (dinamik):", targetRoom);
     console.log("   Tip: cekim");
-    console.log("   NOT: Tüm veriler otomatik olarak bu odaya gönderiliyor");
     console.log("Socket bağlantı durumu:", socketClient.connected ? "Bağlı" : "Bağlı DEĞİL");
 
     // Socket bağlantısı kontrolü
@@ -246,36 +207,17 @@ app.post("/yatirim", (req, res) => {
     console.log(JSON.stringify(data, null, 2));
     console.log("═══════════════════════════════════════");
 
-    // Her zaman config.ROOM_NAME odasına gönder (sabit oda)
-    const targetRoom = config.ROOM_NAME;
+    // Dinamik room_code kullan - gelen data.room_code neyse o kullanılacak
+    const targetRoom = data.room_code;
     
     if (!targetRoom) {
-      console.error("❌ HATA: config.ROOM_NAME tanımlı değil!");
-      return res.status(500).json({ success: false, message: "Oda kodu tanımlı değil" });
+      console.error("❌ HATA: data.room_code tanımlı değil!");
+      return res.status(400).json({ success: false, message: "room_code parametresi gereklidir" });
     }
-
-    // Gelen verideki room_code kontrolü - yanlışsa reddet
-    if (data.room_code && data.room_code !== config.ROOM_NAME) {
-      console.error(`❌ YANLIŞ ODA KODU GELDİ: ${data.room_code}`);
-      console.error(`   Beklenen: ${config.ROOM_NAME}`);
-      console.error(`   Gelen: ${data.room_code}`);
-      console.error(`   Veri reddedildi - sadece ${config.ROOM_NAME} odasına izin var`);
-      return res.status(400).json({ 
-        success: false, 
-        message: `Yanlış oda kodu. Sadece ${config.ROOM_NAME} odasına izin var.`,
-        received_room_code: data.room_code,
-        expected_room_code: config.ROOM_NAME
-      });
-    }
-
-    // data.room_code'u config.ROOM_NAME ile override et (her zaman doğru oda kodu gönderilsin)
-    data.room_code = config.ROOM_NAME;
 
     console.log("📤 Yatırım API - Socket'e gönderiliyor");
-    console.log("   Config.ROOM_NAME:", config.ROOM_NAME);
-    console.log("   targetRoom:", targetRoom);
+    console.log("   targetRoom (dinamik):", targetRoom);
     console.log("   Tip: yatirim");
-    console.log("   NOT: Tüm veriler otomatik olarak bu odaya gönderiliyor");
     console.log("Socket bağlantı durumu:", socketClient.connected ? "Bağlı" : "Bağlı DEĞİL");
 
     // Socket bağlantısı kontrolü
