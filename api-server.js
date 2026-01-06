@@ -1,8 +1,17 @@
 import express from "express";
 import { io as ClientIO } from "socket.io-client";
+import cors from "cors";
 
 // API sunucusu için Express instance'ı
 const app = express();
+
+// CORS ayarları - her yerden gelen isteklere izin ver
+app.use(cors({
+  origin: "*", // Tüm origin'lere izin ver
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  credentials: false
+}));
 
 // JSON body parser middleware
 app.use(express.json());
