@@ -78,21 +78,21 @@ app.post("/teslimat", (req, res) => {
     }
 
     // API'den gelen teslimat datasını socket sunucusuna ilet
+    // Teslimat için özel event kullanılıyor
     const emitData = {
       roomCode: targetRoom,
-      type: "teslimat",
       payload: data
     };
 
     console.log("📤 Emit edilecek data:", {
       roomCode: emitData.roomCode,
-      type: emitData.type,
+      event: "teslimat",
       payloadKeys: Object.keys(emitData.payload)
     });
 
-    socketClient.emit("transaction-update", emitData);
+    socketClient.emit("teslimat", emitData);
 
-    console.log("✅ Socket'e emit edildi - roomCode:", targetRoom);
+    console.log("✅ Socket'e 'teslimat' event'i emit edildi - roomCode:", targetRoom);
 
     // Başarılı yanıt
     res.json({
@@ -158,13 +158,13 @@ app.post("/cekim", (req, res) => {
     }
 
     // API'den gelen çekim datasını socket sunucusuna ilet
-    socketClient.emit("transaction-update", {
+    // Çekim için özel event kullanılıyor
+    socketClient.emit("cekim", {
       roomCode: targetRoom,
-      type: "cekim",
       payload: data
     });
 
-    console.log("✅ Socket'e gönderildi - roomCode:", targetRoom);
+    console.log("✅ Socket'e 'cekim' event'i emit edildi - roomCode:", targetRoom);
 
     // Başarılı yanıt
     res.json({
@@ -230,21 +230,21 @@ app.post("/yatirim", (req, res) => {
     }
 
     // API'den gelen yatırım datasını socket sunucusuna ilet
+    // Yatırım için özel event kullanılıyor
     const emitData = {
       roomCode: targetRoom,
-      type: "yatirim",
       payload: data
     };
 
     console.log("📤 Emit edilecek data:", {
       roomCode: emitData.roomCode,
-      type: emitData.type,
+      event: "yatirim",
       payloadKeys: Object.keys(emitData.payload)
     });
 
-    socketClient.emit("transaction-update", emitData);
+    socketClient.emit("yatirim", emitData);
 
-    console.log("✅ Socket'e emit edildi - roomCode:", targetRoom);
+    console.log("✅ Socket'e 'yatirim' event'i emit edildi - roomCode:", targetRoom);
 
     // Başarılı yanıt
     res.json({

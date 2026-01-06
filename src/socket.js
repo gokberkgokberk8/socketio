@@ -57,31 +57,28 @@ export default function initSocket(io) {
       });
     });
 
-    // API sunucusundan gelen transaction event'i
-    // roomCode: hangi odaya gönderileceği (dinamik)
-    // type: "teslimat" | "cekim" | "yatirim"
-    // payload: API'den gelen orijinal data
-    socket.on("transaction-update", (eventData) => {
+    // API sunucusundan gelen transaction event'lerini işleyen ortak fonksiyon
+    // Her transaction türü için ayrı event kullanılıyor: teslimat, cekim, yatirim
+    const handleTransactionEvent = (eventType, eventData) => {
       try {
         // Destructure kontrolü
         if (!eventData || typeof eventData !== "object") {
           return; // Geçersiz veri
         }
 
-        const { roomCode, type, payload } = eventData;
+        const { roomCode, payload } = eventData;
 
         // roomCode yoksa işlem yapma
         if (!roomCode) {
-          console.warn("⚠️ transaction-update: roomCode eksik");
+          console.warn(`⚠️ ${eventType}: roomCode eksik`);
           return;
         }
 
         // Dinamik room_code yapısı - gelen roomCode neyse o odaya gönderilir
         console.log("========================================");
-        console.log("🔔 TRANSACTION-UPDATE EVENT ALINDI");
+        console.log(`🔔 ${eventType.toUpperCase()} EVENT ALINDI`);
         console.log("Socket ID:", socket.id);
         console.log("Oda (dinamik):", roomCode);
-        console.log("Tip:", type);
         console.log("Event data:", JSON.stringify(eventData, null, 2));
 
         // Odada kaç kullanıcı var kontrol et
@@ -96,22 +93,37 @@ export default function initSocket(io) {
         }
 
         // İlgili odaya datayı aynen ilet - sadece belirtilen roomCode'daki kullanıcılar alır
-        io.to(roomCode).emit("transaction-update", {
-          type,
+        // Event ismi transaction türüne göre değişiyor: teslimat, cekim, yatirim
+        io.to(roomCode).emit(eventType, {
           data: payload
         });
 
-        console.log(`✅ ${roomCode} odasına transaction-update gönderildi`);
+        console.log(`✅ ${roomCode} odasına '${eventType}' event'i gönderildi`);
         console.log("Gönderilen data:", {
-          type,
+          eventType,
           dataKeys: payload ? Object.keys(payload) : "payload yok"
         });
         console.log("========================================");
       } catch (error) {
-        console.error("❌ transaction-update işlenirken hata:", error);
+        console.error(`❌ ${eventType} işlenirken hata:`, error);
         console.error("Error stack:", error.stack);
         console.log("========================================");
       }
+    };
+
+    // Teslimat event handler
+    socket.on("teslimat", (eventData) => {
+      handleTransactionEvent("teslimat", eventData);
+    });
+
+    // Çekim event handler
+    socket.on("cekim", (eventData) => {
+      handleTransactionEvent("cekim", eventData);
+    });
+
+    // Yatırım event handler
+    socket.on("yatirim", (eventData) => {
+      handleTransactionEvent("yatirim", eventData);
     });
 
     socket.on("disconnect", () => {
