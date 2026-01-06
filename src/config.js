@@ -1,5 +1,5 @@
 export const config = {
-    PORT: 3001,
+    PORT: 2999,
     ROOM_NAME: "MAIN_ROOM", //Dinamik olarak degişcek
   };
   
