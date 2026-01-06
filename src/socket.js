@@ -1,5 +1,10 @@
 import { config } from "./config.js";
 
+// Bu fonksiyon Socket.IO sunucusunu yapılandırır
+// Amaç:
+// - Kullanıcıları varsayılan odaya almak
+// - Kullanıcı mesajlarını odaya yayınlamak
+// - API sunucusundan gelen transaction verilerini ilgili odaya iletmek
 export default function initSocket(io) {
   io.on("connection", (socket) => {
     console.log("🟢 User connected:", socket.id);
@@ -22,6 +27,36 @@ export default function initSocket(io) {
         sender: socket.id,
         message
       });
+    });
+
+    // API sunucusundan gelen transaction event'i
+    // roomCode: hangi odaya gönderileceği
+    // type: "teslimat" | "cekim"
+    // payload: API'den gelen orijinal data
+    socket.on("transaction-update", ({ roomCode, type, payload }) => {
+      try {
+        // roomCode yoksa işlem yapma
+        if (!roomCode) {
+          console.log("⚠️  Geçersiz transaction-update (roomCode yok):", {
+            type,
+            payload
+          });
+          return;
+        }
+
+        console.log("📡 Transaction update alındı:", {
+          roomCode,
+          type
+        });
+
+        // İlgili odaya datayı aynen ilet
+        io.to(roomCode).emit("transaction-update", {
+          type,
+          data: payload
+        });
+      } catch (error) {
+        console.error("❌ transaction-update işlenirken hata:", error);
+      }
     });
 
     socket.on("disconnect", () => {

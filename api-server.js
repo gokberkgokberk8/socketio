@@ -1,9 +1,27 @@
 import express from "express";
+import { io as ClientIO } from "socket.io-client";
 
+// API sunucusu için Express instance'ı
 const app = express();
 
 // JSON body parser middleware
 app.use(express.json());
+
+// Socket sunucusuna bağlanan client
+// Not: Burada socket sunucusunun adresi kullanılır (lokalde 2999 portu)
+const socketClient = ClientIO("http://localhost:2999", {
+  transports: ["websocket"],
+  reconnection: true
+});
+
+// Socket bağlantı durumlarını logla (debug için)
+socketClient.on("connect", () => {
+  console.log("🔗 API -> Socket bağlantısı kuruldu. ID:", socketClient.id);
+});
+
+socketClient.on("disconnect", (reason) => {
+  console.log("⚠️  API -> Socket bağlantısı koptu:", reason);
+});
 
 // API Endpoint'leri
 
@@ -31,6 +49,17 @@ app.post("/teslimat", (req, res) => {
     console.log("📋 Gelen Data:");
     console.log(JSON.stringify(data, null, 2));
     console.log("═══════════════════════════════════════");
+
+    // room_code varsa datayı ilgili odaya gönder
+    // Not: room_code alanı zorunlu değil, varsa odaya publish ediyoruz
+    if (data.room_code) {
+      // API'den gelen teslimat datasını socket sunucusuna ilet
+      socketClient.emit("transaction-update", {
+        roomCode: data.room_code,
+        type: "teslimat",
+        payload: data
+      });
+    }
 
     // Başarılı yanıt
     res.json({
@@ -72,6 +101,16 @@ app.post("/cekim", (req, res) => {
     console.log("📋 Gelen Data:");
     console.log(JSON.stringify(data, null, 2));
     console.log("═══════════════════════════════════════");
+
+    // room_code varsa datayı ilgili odaya gönder
+    if (data.room_code) {
+      // API'den gelen çekim datasını socket sunucusuna ilet
+      socketClient.emit("transaction-update", {
+        roomCode: data.room_code,
+        type: "cekim",
+        payload: data
+      });
+    }
 
     // Başarılı yanıt
     res.json({
