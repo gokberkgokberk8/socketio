@@ -84,11 +84,22 @@ export default function initSocket(io) {
         // Sadece config.ROOM_NAME odasına gönder (güvenlik kontrolü)
         console.log("Oda kontrolü - roomCode:", roomCode, "config.ROOM_NAME:", config.ROOM_NAME);
         
+        // 1. Kontrol: eventData.roomCode kontrolü
         if (roomCode !== config.ROOM_NAME) {
           console.error(`❌ İZİN VERİLMEYEN ODA: ${roomCode}`);
           console.error(`   Beklenen: ${config.ROOM_NAME}`);
           console.error(`   Gelen: ${roomCode}`);
           console.error(`   Veri gönderilmiyor - sadece ${config.ROOM_NAME} odasına izin var`);
+          return;
+        }
+        
+        // 2. Kontrol: payload.data.room_code kontrolü (ekstra güvenlik)
+        const payloadRoomCode = payload?.data?.room_code;
+        if (payloadRoomCode && payloadRoomCode !== config.ROOM_NAME) {
+          console.error(`❌ PAYLOAD İÇİNDE YANLIŞ ODA KODU: ${payloadRoomCode}`);
+          console.error(`   Beklenen: ${config.ROOM_NAME}`);
+          console.error(`   Gelen: ${payloadRoomCode}`);
+          console.error(`   Veri gönderilmiyor - payload içindeki room_code yanlış`);
           return;
         }
         

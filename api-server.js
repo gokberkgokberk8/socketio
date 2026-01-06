@@ -64,6 +64,23 @@ app.post("/teslimat", (req, res) => {
       return res.status(500).json({ success: false, message: "Oda kodu tanımlı değil" });
     }
 
+    // Gelen verideki room_code kontrolü - yanlışsa reddet
+    if (data.room_code && data.room_code !== config.ROOM_NAME) {
+      console.error(`❌ YANLIŞ ODA KODU GELDİ: ${data.room_code}`);
+      console.error(`   Beklenen: ${config.ROOM_NAME}`);
+      console.error(`   Gelen: ${data.room_code}`);
+      console.error(`   Veri reddedildi - sadece ${config.ROOM_NAME} odasına izin var`);
+      return res.status(400).json({ 
+        success: false, 
+        message: `Yanlış oda kodu. Sadece ${config.ROOM_NAME} odasına izin var.`,
+        received_room_code: data.room_code,
+        expected_room_code: config.ROOM_NAME
+      });
+    }
+
+    // data.room_code'u config.ROOM_NAME ile override et (her zaman doğru oda kodu gönderilsin)
+    data.room_code = config.ROOM_NAME;
+
     console.log("📤 Teslimat API - Socket'e gönderiliyor");
     console.log("   Config.ROOM_NAME:", config.ROOM_NAME);
     console.log("   targetRoom:", targetRoom);
@@ -146,6 +163,23 @@ app.post("/cekim", (req, res) => {
       return res.status(500).json({ success: false, message: "Oda kodu tanımlı değil" });
     }
 
+    // Gelen verideki room_code kontrolü - yanlışsa reddet
+    if (data.room_code && data.room_code !== config.ROOM_NAME) {
+      console.error(`❌ YANLIŞ ODA KODU GELDİ: ${data.room_code}`);
+      console.error(`   Beklenen: ${config.ROOM_NAME}`);
+      console.error(`   Gelen: ${data.room_code}`);
+      console.error(`   Veri reddedildi - sadece ${config.ROOM_NAME} odasına izin var`);
+      return res.status(400).json({ 
+        success: false, 
+        message: `Yanlış oda kodu. Sadece ${config.ROOM_NAME} odasına izin var.`,
+        received_room_code: data.room_code,
+        expected_room_code: config.ROOM_NAME
+      });
+    }
+
+    // data.room_code'u config.ROOM_NAME ile override et (her zaman doğru oda kodu gönderilsin)
+    data.room_code = config.ROOM_NAME;
+
     console.log("📤 Çekim API - Socket'e gönderiliyor");
     console.log("   Config.ROOM_NAME:", config.ROOM_NAME);
     console.log("   targetRoom:", targetRoom);
@@ -219,6 +253,23 @@ app.post("/yatirim", (req, res) => {
       console.error("❌ HATA: config.ROOM_NAME tanımlı değil!");
       return res.status(500).json({ success: false, message: "Oda kodu tanımlı değil" });
     }
+
+    // Gelen verideki room_code kontrolü - yanlışsa reddet
+    if (data.room_code && data.room_code !== config.ROOM_NAME) {
+      console.error(`❌ YANLIŞ ODA KODU GELDİ: ${data.room_code}`);
+      console.error(`   Beklenen: ${config.ROOM_NAME}`);
+      console.error(`   Gelen: ${data.room_code}`);
+      console.error(`   Veri reddedildi - sadece ${config.ROOM_NAME} odasına izin var`);
+      return res.status(400).json({ 
+        success: false, 
+        message: `Yanlış oda kodu. Sadece ${config.ROOM_NAME} odasına izin var.`,
+        received_room_code: data.room_code,
+        expected_room_code: config.ROOM_NAME
+      });
+    }
+
+    // data.room_code'u config.ROOM_NAME ile override et (her zaman doğru oda kodu gönderilsin)
+    data.room_code = config.ROOM_NAME;
 
     console.log("📤 Yatırım API - Socket'e gönderiliyor");
     console.log("   Config.ROOM_NAME:", config.ROOM_NAME);
