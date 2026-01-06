@@ -9,14 +9,24 @@ export default function initSocket(io) {
   io.on("connection", (socket) => {
     console.log("🟢 User connected:", socket.id);
 
-    // otomatik tek odaya sok
-    socket.join(config.ROOM_NAME);
-    
-    // Kullanıcının dinlediği odayı console'da göster
-    console.log(`📡 Kullanıcı ${socket.id} şu odayı dinliyor: ${config.ROOM_NAME}`);
+    // Kullanıcılar manuel olarak join olacak, otomatik join yok
+    // join-room event'i ile odaya katılabilirler
 
-    // odaya bağlandımı test etmek için kullanıcıyı bildir
-    io.to(config.ROOM_NAME).emit("user-joined", socket.id);
+    // Kullanıcıların manuel olarak odaya join olması için event handler
+    socket.on("join-room", (roomName) => {
+      // Sadece ROOM_NAME veya ROOM_NAME2 odalarına izin ver
+      if (roomName === config.ROOM_NAME || roomName === config.ROOM_NAME2) {
+        socket.join(roomName);
+        console.log(`📡 Kullanıcı ${socket.id} şu odaya join oldu: ${roomName}`);
+        // Kullanıcıya bildir
+        socket.emit("room-joined", { room: roomName, socketId: socket.id });
+      } else {
+        console.warn(`⚠️ Kullanıcı ${socket.id} izin verilmeyen odaya join olmaya çalıştı: ${roomName}`);
+        socket.emit("room-join-error", { 
+          message: `İzin verilmeyen oda: ${roomName}. Sadece ${config.ROOM_NAME} veya ${config.ROOM_NAME2} odalarına join olabilirsiniz.` 
+        });
+      }
+    });
 
     // Kullanıcıdan mesaj geldiğinde hem odaya yayınla hem de sunucu konsoluna yaz
     socket.on("send-message", (message) => {
@@ -109,9 +119,6 @@ export default function initSocket(io) {
 
     socket.on("disconnect", () => {
       console.log("🔴 User disconnected:", socket.id);
-      console.log(`📡 Kullanıcı ${socket.id} şu odadan çıktı: ${config.ROOM_NAME}`);
-
-      io.to(config.ROOM_NAME).emit("user-left", socket.id);
     });
   });
 }
