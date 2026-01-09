@@ -12,13 +12,21 @@ app.use(express.static("."));
 const server = http.createServer(app);
 
 const io = new Server(server, {
+  // CORS ayarları - Nginx üzerinden çalışırken de gerekli
   cors: {
-    origin: "*"
+    origin: "*", // Tüm origin'lere izin ver
+    methods: ["GET", "POST"],
+    credentials: false
   },
-  pingTimeout: 60000,
-  pingInterval: 25000,
-  maxHttpBufferSize: 1e6,
-  transports: ["websocket", "polling"]
+  // Path ayarı - Nginx'teki path ile eşleşmeli
+  path: "/socket.io/",
+  // Eski Socket.IO versiyonları için uyumluluk
+  allowEIO3: true,
+  // Performans optimizasyonları
+  pingTimeout: 60000, // 60 saniye - bağlantı timeout
+  pingInterval: 25000, // 25 saniye - heartbeat interval
+  maxHttpBufferSize: 1e6, // 1MB - maksimum mesaj boyutu
+  transports: ["websocket", "polling"] // WebSocket öncelikli
 });
 
 initSocket(io);
